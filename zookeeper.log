@@ -1,0 +1,1 @@
+./scripts/start_kafka.sh: line 5: kafka_2.13-3.4.0/bin/zookeeper-server-start.sh: No such file or directory
