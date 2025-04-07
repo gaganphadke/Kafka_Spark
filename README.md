@@ -83,6 +83,10 @@ cp /path/to/your/ds.csv data/
 ### 1. Start Kafka
 
 Start Zookeeper and Kafka broker:
+Mac:
+brew services start postgres
+brew services kafka
+brew services start zookeeper
 
 ```bash
 chmod +x scripts/start_kafka.sh
