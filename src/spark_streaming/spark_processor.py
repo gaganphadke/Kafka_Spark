@@ -13,20 +13,19 @@ import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_handler import DatabaseHandler
-
+os.environ['JAVA_HOME'] = '/usr/local/opt/openjdk@11' 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SparkStreamProcessor:
-    def __init__(self, kafka_bootstrap_servers='127.0.0.1:9092', kafka_topic='tweets_topic'):
+    def __init__(self, kafka_bootstrap_servers='127.0.0.1:9092', kafka_topic='sales_topic'):
         self.kafka_bootstrap_servers = kafka_bootstrap_servers
         self.kafka_topic = kafka_topic
 
         self.spark = SparkSession.builder \
-            .appName("EcommerceDataStreaming") \
-            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.2") \
-            .config("spark.sql.shuffle.partitions", "2") \
+            .appName("E-Commerce Data Pipeline") \
             .master("local[*]") \
+            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2") \
             .getOrCreate()
 
         self.spark.sparkContext.setLogLevel("WARN")
