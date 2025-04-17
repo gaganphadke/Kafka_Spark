@@ -41,6 +41,7 @@ class BatchProcessor:
             
             # Load CSV
             df = self.spark.read.csv(csv_path, header=True, inferSchema=True)
+            df = df.repartition(200)
             logger.info(f"Loaded {df.count()} records for batch processing")
 
             if {'Category', 'Amount', 'ship-state'}.issubset(df.columns):

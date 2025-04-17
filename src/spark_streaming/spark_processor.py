@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SparkStreamProcessor:
-    def __init__(self, kafka_bootstrap_servers='127.0.0.1:9092', kafka_topic='tweets_topic'):
+    def __init__(self, kafka_bootstrap_servers='127.0.0.1:9092', kafka_topic='sales_topic'):
         self.kafka_bootstrap_servers = kafka_bootstrap_servers
         self.kafka_topic = kafka_topic
 
