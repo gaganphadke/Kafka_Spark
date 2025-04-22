@@ -1,3 +1,4 @@
+# src/performance/performance_analyzer.py
 import sys
 import os
 import logging
@@ -23,100 +24,42 @@ class PerformanceAnalyzer:
                 logger.error("Could not retrieve results from database")
                 return False
 
-            streaming_df = results['streaming']
-            batch_df = results['batch']
-            perf_df = results['performance']
-            category_df = results.get('category_sales', pd.DataFrame())
+            perf_df = results.get('performance', pd.DataFrame())
 
-            logger.info("\n=== Performance Comparison ===")
+            logger.info("\n=== Execution Time Comparison ===")
+            if perf_df.empty:
+                logger.warning("No performance data available.")
+                return False
 
-            # Compare top SKUs by revenue
-            logger.info("\nTop 10 SKU Revenue Comparison:")
-            combined_df = pd.merge(
-                streaming_df, batch_df,
-                on='sku',
-                how='outer',
-                suffixes=('_streaming', '_batch')
-            ).fillna(0)
-            logger.info("\n" + combined_df.to_string())
+            for _, row in perf_df.iterrows():
+                logger.info(f"{row['processing_type'].title()} processing: {row['avg_time']:.2f} seconds")
 
-            # Execution time comparison
-            if not perf_df.empty:
-                logger.info("\nExecution Time Comparison:")
-                for _, row in perf_df.iterrows():
-                    logger.info(f"{row['processing_type'].title()} processing: {row['avg_time']:.2f} seconds")
-
-            # Top category by sales
-            if not category_df.empty:
-                top_category = category_df.sort_values("total_sales", ascending=False).iloc[0]
-                logger.info(f"\nTop Category by Total Sales: {top_category['category']} (${top_category['total_sales']:.2f})")
-
-            # Generate charts
-            self.generate_charts(streaming_df, batch_df, perf_df, category_df)
+            self.generate_chart(perf_df)
             return True
 
         except Exception as e:
             logger.error(f"Error analyzing performance: {e}")
             return False
 
-    def generate_charts(self, streaming_df, batch_df, perf_df, category_df):
-        """Generate comparison charts."""
+    def generate_chart(self, perf_df):
+        """Generate and save execution time comparison chart."""
         try:
             os.makedirs('output', exist_ok=True)
 
-            # 1. Revenue Comparison by SKU
-            plt.figure(figsize=(12, 6))
-            combined_df = pd.merge(
-                streaming_df, batch_df,
-                on='sku',
-                how='outer',
-                suffixes=('_streaming', '_batch')
-            ).fillna(0)
-
-            combined_df = combined_df.sort_values('total_revenue_streaming', ascending=False).head(10)
-            x = range(len(combined_df))
-            width = 0.35
-
-            plt.bar([i - width/2 for i in x], combined_df['total_revenue_streaming'], width, label='Streaming')
-            plt.bar([i + width/2 for i in x], combined_df['total_revenue_batch'], width, label='Batch')
-
-            plt.xlabel('SKU')
-            plt.ylabel('Total Revenue')
-            plt.title('Top SKUs by Revenue: Streaming vs Batch')
-            plt.xticks(x, combined_df['sku'], rotation=45, ha='right')
-            plt.legend()
+            plt.figure(figsize=(8, 5))
+            ax = perf_df.plot(kind='bar', x='processing_type', y='avg_time', legend=False)
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}s'))
+            plt.title('Average Execution Time: Streaming vs Batch')
+            plt.xlabel('')
+            plt.ylabel('Execution Time')
             plt.tight_layout()
-            plt.savefig('output/sku_revenue_comparison.png')
-            logger.info("Created SKU revenue comparison chart: output/sku_revenue_comparison.png")
+            plt.savefig('output/performance_comparison.png')
 
-            # 2. Execution Time Comparison
-            if not perf_df.empty:
-                plt.figure(figsize=(8, 5))
-                ax = perf_df.plot(kind='bar', x='processing_type', y='avg_time', legend=False)
-                ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}s'))
-                plt.title('Average Execution Time: Streaming vs Batch')
-                plt.xlabel('')
-                plt.ylabel('Execution Time')
-                plt.tight_layout()
-                plt.savefig('output/performance_comparison.png')
-                logger.info("Created performance comparison chart: output/performance_comparison.png")
-
-            # 3. Category Sales Chart
-            if not category_df.empty:
-                top_categories = category_df.sort_values("total_sales", ascending=False).head(10)
-                plt.figure(figsize=(10, 6))
-                plt.bar(top_categories['category'], top_categories['total_sales'], color='skyblue')
-                plt.title("Top 10 Categories by Total Sales")
-                plt.xticks(rotation=45, ha='right')
-                plt.ylabel("Total Sales")
-                plt.tight_layout()
-                plt.savefig("output/category_sales.png")
-                logger.info("Created category sales chart: output/category_sales.png")
-
+            logger.info("Created performance comparison chart: output/performance_comparison.png")
             return True
 
         except Exception as e:
-            logger.error(f"Error generating charts: {e}")
+            logger.error(f"Error generating performance chart: {e}")
             return False
 
 if __name__ == "__main__":

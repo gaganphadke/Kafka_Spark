@@ -1,3 +1,0 @@
-25/04/22 13:32:33 WARN Utils: Your hostname, LinuxVM resolves to a loopback address: 127.0.1.1; using 10.0.2.15 instead (on interface enp0s3)
-25/04/22 13:32:33 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
-25/04/22 13:32:34 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable

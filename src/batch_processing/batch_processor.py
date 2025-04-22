@@ -59,21 +59,21 @@ class BatchProcessor:
                     .agg(spark_sum("Qty").alias("total_qty")) \
                     .orderBy(desc("total_qty"))
 
-                #3. Top revenue
-                top_revenue = df.groupBy("SKU") \
-                    .agg(spark_sum("Amount").alias("total_revenue")) \
-                    .orderBy(desc("total_revenue"))
+                # #3. Top revenue
+                # top_revenue = df.groupBy("SKU") \
+                #     .agg(spark_sum("Amount").alias("total_revenue")) \
+                #     .orderBy(desc("total_revenue"))
 
 
                 # Save results
                 self.db_handler.save_batch_results(top_categories.toPandas(), 'batch_top_categories')
                 self.db_handler.save_batch_results(top_qty.toPandas(), 'batch_top_qty')
-                self.db_handler.save_batch_results(top_revenue.toPandas(), 'batch_top_revenue')
+                # self.db_handler.save_batch_results(top_revenue.toPandas(), 'batch_top_revenue')
 
                 processing_time = time.time() - start_time
                 logger.info(f"Batch processing completed in {processing_time:.2f} seconds")
                 
-                if benchmark:
+                if not benchmark:
                     self.db_handler.save_performance_metrics('batch', processing_time)
             else:
                 logger.warning("Required columns ('Category', 'Amount', 'ship-state') not found in dataset")

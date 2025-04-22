@@ -44,6 +44,7 @@ class SparkStreamProcessor:
 
     def process_stream(self, processing_time="30 seconds", benchmark=False):
         try:
+            start_time = time.time()  # Start timer
             df = self.spark \
                 .readStream \
                 .format("kafka") \
@@ -93,13 +94,19 @@ class SparkStreamProcessor:
                 .trigger(processingTime=processing_time) \
                 .start()
 
-            total_sales_category.writeStream \
-                .outputMode("complete") \
-                .foreachBatch(lambda df, eid: foreach_batch_function(df, eid, "streaming_top_category_sales")) \
-                .trigger(processingTime=processing_time) \
-                .start() \
-                .awaitTermination(120)
-
+            # total_sales_category.writeStream \
+            #     .outputMode("complete") \
+            #     .foreachBatch(lambda df, eid: foreach_batch_function(df, eid, "streaming_top_categories")) \
+            #     .trigger(processingTime=processing_time) \
+            #     .start() \
+            #     .awaitTermination()
+            
+            # End timer after termination
+            if not benchmark:
+                total_time = time.time() - start_time
+                self.db_handler.save_performance_metrics("streaming", total_time)
+                logger.info(f"Streaming processing time recorded: {total_time:.2f} seconds")
+            logger.info(f"Streaming processing done")
             return True
         except Exception as e:
             logger.error(f"Error processing Spark stream: {e}")

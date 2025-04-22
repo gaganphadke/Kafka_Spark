@@ -24,10 +24,10 @@ echo "Kill Spark Streaming"
 
 # Run batch processing job
 echo "Starting batch processing job..."
-python3 src/batch_processing/batch_processor.py > log2.txt
+python3 src/batch_processing/batch_processor.py
 
 # Run benchmark to compare performance
-echo "Not Running performance comparison..."
-# python3 src/utils/performance_metrics.py
+echo "Running performance comparison..."
+python3 src/utils/performance_metrics.py
 
 echo "Pipeline execution completed!"
