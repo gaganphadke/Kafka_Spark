@@ -41,6 +41,12 @@ class DatabaseHandler:
                     total_revenue DOUBLE PRECISION
                 );
             """,
+            "streaming_top_categories": """
+                CREATE TABLE IF NOT EXISTS streaming_top_categories (
+                    category TEXT PRIMARY KEY,
+                    total_sales DOUBLE PRECISION
+                );
+            """,
             "batch_top_qty": """
                 CREATE TABLE IF NOT EXISTS batch_top_qty (
                     sku TEXT PRIMARY KEY,
@@ -51,6 +57,12 @@ class DatabaseHandler:
                 CREATE TABLE IF NOT EXISTS batch_top_revenue (
                     sku TEXT PRIMARY KEY,
                     total_revenue DOUBLE PRECISION
+                );
+            """,
+            "batch_top_categories": """
+                CREATE TABLE IF NOT EXISTS batch_top_categories (
+                    category TEXT PRIMARY KEY,
+                    total_sales DOUBLE PRECISION
                 );
             """,
             "performance_metrics": """
@@ -102,7 +114,15 @@ class DatabaseHandler:
                         """,
                         (row['SKU'], float(row['total_revenue']))
                     )
-
+                elif 'total_sales' in row and 'Category' in row:
+                    cursor.execute(
+                        """
+                        INSERT INTO streaming_top_categories (category, total_sales)
+                        VALUES (%s, %s)
+                        ON CONFLICT (category) DO UPDATE SET total_sales = EXCLUDED.total_sales;
+                        """,
+                        (row['Category'], float(row['total_sales']))
+                    )
             conn.commit()
             logger.info(f"Saved {len(df)} streaming results to {table_name}")
             return True
@@ -140,7 +160,15 @@ class DatabaseHandler:
                         """,
                         (row['SKU'], float(row['total_revenue']))
                     )
-
+                elif 'total_sales' in row and 'Category' in row:
+                    cursor.execute(
+                        """
+                        INSERT INTO batch_top_categories (category, total_sales)
+                        VALUES (%s, %s)
+                        ON CONFLICT (category) DO UPDATE SET total_sales = EXCLUDED.total_sales;
+                        """,
+                        (row['Category'], float(row['total_sales']))
+                    )
             conn.commit()
             logger.info(f"Saved {len(df)} batch results to {table_name}")
             return True

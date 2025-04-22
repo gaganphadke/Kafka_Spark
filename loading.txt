@@ -1,0 +1,5 @@
+zookeeper-server-start /opt/homebrew/Cellar/kafka/3.9.0/libexec/config/zookeeper.properties
+
+kafka-server-start /opt/homebrew/Cellar/kafka/3.9.0/libexec/config/server.properties
+
+psql -d sales_data                 

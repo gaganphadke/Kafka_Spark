@@ -27,7 +27,6 @@ class PerformanceAnalyzer:
             batch_df = results['batch']
             perf_df = results['performance']
             category_df = results.get('category_sales', pd.DataFrame())
-            state_df = results.get('shipping_state_orders', pd.DataFrame())
 
             logger.info("\n=== Performance Comparison ===")
 
@@ -47,25 +46,20 @@ class PerformanceAnalyzer:
                 for _, row in perf_df.iterrows():
                     logger.info(f"{row['processing_type'].title()} processing: {row['avg_time']:.2f} seconds")
 
-            # New: Top category by sales
+            # Top category by sales
             if not category_df.empty:
                 top_category = category_df.sort_values("total_sales", ascending=False).iloc[0]
                 logger.info(f"\nTop Category by Total Sales: {top_category['category']} (${top_category['total_sales']:.2f})")
 
-            # New: Shipping state ranking
-            if not state_df.empty:
-                logger.info("\nTop 10 Shipping States by Order Count:")
-                logger.info("\n" + state_df.sort_values("order_count", ascending=False).head(10).to_string(index=False))
-
-            # Charts
-            self.generate_charts(streaming_df, batch_df, perf_df, category_df, state_df)
+            # Generate charts
+            self.generate_charts(streaming_df, batch_df, perf_df, category_df)
             return True
 
         except Exception as e:
             logger.error(f"Error analyzing performance: {e}")
             return False
 
-    def generate_charts(self, streaming_df, batch_df, perf_df, category_df, state_df):
+    def generate_charts(self, streaming_df, batch_df, perf_df, category_df):
         """Generate comparison charts."""
         try:
             os.makedirs('output', exist_ok=True)
@@ -118,18 +112,6 @@ class PerformanceAnalyzer:
                 plt.tight_layout()
                 plt.savefig("output/category_sales.png")
                 logger.info("Created category sales chart: output/category_sales.png")
-
-            # 4. Shipping State Orders Chart
-            if not state_df.empty:
-                top_states = state_df.sort_values("order_count", ascending=False).head(10)
-                plt.figure(figsize=(10, 6))
-                plt.bar(top_states['shipping_state'], top_states['order_count'], color='salmon')
-                plt.title("Top 10 States by Order Count")
-                plt.xticks(rotation=45, ha='right')
-                plt.ylabel("Order Count")
-                plt.tight_layout()
-                plt.savefig("output/shipping_state_orders.png")
-                logger.info("Created shipping state orders chart: output/shipping_state_orders.png")
 
             return True
 

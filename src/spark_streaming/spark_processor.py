@@ -13,7 +13,7 @@ import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_handler import DatabaseHandler
-
+# os.environ['JAVA_HOME'] = '/usr/local/opt/openjdk@11' 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,9 @@ class SparkStreamProcessor:
         self.kafka_topic = kafka_topic
 
         self.spark = SparkSession.builder \
-            .appName("EcommerceDataStreaming") \
-            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.2") \
-            .config("spark.sql.shuffle.partitions", "2") \
+            .appName("E-Commerce Data Pipeline") \
             .master("local[*]") \
+            .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2") \
             .getOrCreate()
 
         self.spark.sparkContext.setLogLevel("WARN")
@@ -76,10 +75,6 @@ class SparkStreamProcessor:
                 .agg(_sum("Amount").alias("total_sales")) \
                 .orderBy(desc("total_sales"))
 
-            # 4. Orders per shipping state, ranked
-            order_count_state = parsed_df.groupBy("Shipping State") \
-                .agg(count("*").alias("order_count")) \
-                .orderBy(desc("order_count"))
 
             def foreach_batch_function(df, epoch_id, table_name):
                 if not df.isEmpty():
@@ -101,12 +96,6 @@ class SparkStreamProcessor:
             total_sales_category.writeStream \
                 .outputMode("complete") \
                 .foreachBatch(lambda df, eid: foreach_batch_function(df, eid, "streaming_top_category_sales")) \
-                .trigger(processingTime=processing_time) \
-                .start()
-
-            order_count_state.writeStream \
-                .outputMode("complete") \
-                .foreachBatch(lambda df, eid: foreach_batch_function(df, eid, "streaming_order_count_by_state")) \
                 .trigger(processingTime=processing_time) \
                 .start() \
                 .awaitTermination(120)
